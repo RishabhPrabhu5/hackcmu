@@ -39,6 +39,10 @@
   }
 }
 
+body {
+  background-color: #e1f3f7;
+}
+
 header {
   background-color: #282c34;
   padding: 20px;
