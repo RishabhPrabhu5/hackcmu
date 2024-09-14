@@ -50,6 +50,8 @@ const Main = () => {
   const [electricBikes, setElectricBikes] = useState(0);
   const [solar, setSolar] = useState(0);
   const [fossil, setFossil] = useState(0);
+  const [electricity, setElectricity] = useState(0);
+  const [carbonTax, setCarbonTax] = useState(0);
   const [selectedTab, setSelectedTab] = useState(0);
   const [combinedEmissions, setCombinedEmissions] = useState([]);
 
@@ -189,6 +191,29 @@ const Main = () => {
 
     return fossilEmissions;
   }
+  const calcElectricityEmissions = () => {
+    const electricityChange = [];
+
+    for (let i = 0; i < 30; i++) {
+      const pdecrease = electricity/1000
+      const emission =  baselineCO2[i] * ((1+pdecrease)**i -1)
+      electricityChange.push(emission);
+    }
+
+    return electricityChange;
+  }
+
+  const calcCarbonTax = () => {
+    const carbonTaxChange = [];
+
+    for (let i = 0; i < 30; i++) {
+      const pdecrease = carbonTax/1000
+      const emission =  baselineCO2[i] * ((1-pdecrease)**i -1)
+      carbonTaxChange.push(emission);
+    }
+
+    return carbonTaxChange;
+  }
 
   const combineEmissionsWithBaseline = () => {
     const GCEmissions = calcGCEmissions();
@@ -197,9 +222,11 @@ const Main = () => {
     const EBEmissions = calcElectricBikeEmissions();
     const solarEmissions = calcSolarEnergyEmissions();
     const fossilEmissions = calcFossilEnergyEmissions();
+    const carbonTaxChange = calcCarbonTax();
+    const electrictyChange = calcElectricityEmissions();
 
     const combined = baselineCO2.map((baseline, index) => 
-      baseline + GCEmissions[index] + ECEmissions[index] + PTEmissions[index] + EBEmissions[index] + solarEmissions[index] + fossilEmissions[index]
+      baseline + GCEmissions[index] + ECEmissions[index] + PTEmissions[index] + EBEmissions[index] + solarEmissions[index] + fossilEmissions[index] + carbonTaxChange[index] + electrictyChange[index]
     );
 
     return combined;
@@ -209,7 +236,7 @@ const Main = () => {
   useEffect(() => {
     const newCombinedEmissions = combineEmissionsWithBaseline();
     setCombinedEmissions(newCombinedEmissions);
-  }, [gasCars, electricCars, publicTransport, electricBikes, solar, fossil]);
+  }, [gasCars, electricCars, publicTransport, electricBikes, solar, fossil, carbonTax, electricity]);
 
   const co2Data = {
     labels: Array.from({ length: 30 }, (_, i) => 2021 + i),
@@ -223,7 +250,7 @@ const Main = () => {
         tension: 0.1
       },
       {
-        label: 'Gas Car CO2 Emissions Added (Millions of Tons)',
+        label: 'CO2 Emissions Due to Policy Changes (Millions of Tons)',
         data: combinedEmissions,
         fill: false,
         borderColor: 'rgba(54,162,235,1)',
@@ -244,37 +271,113 @@ const Main = () => {
         </Typography>
 
         <Tabs className="tabs-custom" value={selectedTab} onChange={handleTabChange} centered>
-          <Tab label="Transportation" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}/>
-          <Tab label="Energy & Agriculture" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}/>
+          <Tab label="Transportation Policies" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}/>
+          <Tab label="Energy Policies" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}/>
+          <Tab label="Industrial Policies" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}/>
         </Tabs>
 
         <Box p={4}>
-          <Grid container spacing={2}>
-            {selectedTab === 0 && (
-              <Box className="percentagesBox" item xs={6}>
-                <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}>Gas Cars Percentage: {gasCars}%</Typography>
-                <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}>Electric Cars Percentage: {electricCars}%</Typography>
-                <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}>Public Transport Percentage: {publicTransport}%</Typography>
-                <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}>Electric Bikes Percentage: {electricBikes}%</Typography>
-              </Box>
-            )}
+            <Grid container spacing={2} justifyContent="center">
+                {selectedTab === 0 && (
+                <Box 
+                    component={Paper} 
+                    elevation={5} 
+                    p={3} 
+                    m={2} 
+                    sx={{ 
+                    textAlign: 'center', 
+                    backgroundColor: '#ffffff', 
+                    maxWidth: '2000px', 
+                    width: '2000px',
+                    display: 'flex',
+                    justifyContent: 'space-evenly',
+                    }}
+                >
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)', color: gasCars >= 0 ? 'green' : 'red'}}>
+                    Gas Cars Percentage: 
+                    <br />
+                    {gasCars}%
+                    </Typography>
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)', color: electricCars >= 0 ? 'green' : 'red'}}>
+                    Electric Cars Percentage: 
+                    <br />
+                    {electricCars}%
+                    </Typography>
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)', color: publicTransport >= 0 ? 'green' : 'red'}}>
+                    Public Transport Percentage: 
+                    <br />
+                    {publicTransport}%
+                    </Typography>
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)', color: electricBikes >= 0 ? 'green' : 'red'}}>
+                    Electric Bikes Percentage: 
+                    <br />
+                    {electricBikes}%
+                    </Typography>
+                </Box>
+                )}
 
-            {selectedTab === 1 && (
-              <>
-                <Grid item xs={6}>
-                  <Box className="percentagesBox" item xs={6}>
-                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}>Solar Energy Percentage: {solar}%</Typography>
-                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}>Fossil Energy Percentage: {fossil}%</Typography>
-                  </Box>
-                </Grid>
-              </>
-            )}
-          </Grid>
-        </Box> 
+                {selectedTab === 1 && (
+                <Box 
+                    component={Paper} 
+                    elevation={5} 
+                    p={3} 
+                    m={2} 
+                    sx={{ 
+                    textAlign: 'center', 
+                    backgroundColor: '#ffffff', 
+                    maxWidth: '2000px', 
+                    width: '2000px',
+                    display: 'flex',
+                    justifyContent: 'space-evenly',
+                    }}
+                >
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)', color: solar >= 0 ? 'green' : 'red'}}>
+                    Solar Energy Percentage Change: 
+                    <br />
+                    {solar}%
+                    </Typography>
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)', color: fossil >= 0 ? 'green' : 'red' }}>
+                    Fossil Energy Percentage Change: 
+                    <br />
+                    {fossil}%
+                    </Typography>
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)', color: electricity >= 0 ? 'green' : 'red' }}>
+                    Electricity Use Percentage Change: 
+                    <br />
+                    {electricity}%
+                    </Typography>
+                </Box>
+                )}
+
+                {selectedTab === 2 && (
+                <Box 
+                    component={Paper} 
+                    elevation={5} 
+                    p={3} 
+                    m={2} 
+                    sx={{ 
+                    textAlign: 'center', 
+                    backgroundColor: '#ffffff', 
+                    maxWidth: '2000px', 
+                    width: '2000px',
+                    display: 'flex',
+                    justifyContent: 'space-evenly',
+                    }}
+                >
+                    <Typography className="body1" variant="body1" sx={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                    Carbon Tax Change: 
+                    <br />
+                    {carbonTax}%
+                    </Typography>
+                </Box>
+                )}
+            </Grid>
+        </Box>
+
 
         {selectedTab === 0 && (
           <Box component={Paper} elevation={8} p={4} mb={4}>
-            <Typography variant="h6">Change in Gas Car Percentage</Typography>
+            <Typography variant="h6">Percent Change in Number of Gas Cars per Year</Typography>
             <Slider
               className="slider-custom"
               value={gasCars}
@@ -289,7 +392,7 @@ const Main = () => {
                 { value: 2, label: '2%' }
               ]}
             />
-            <Typography variant="h6">Change in Electric Car Percentage</Typography>
+            <Typography variant="h6">Percent Change in Number of Electric Cars per Year</Typography>
             <Slider
               className="slider-custom"
               value={electricCars}
@@ -304,7 +407,7 @@ const Main = () => {
                 { value: 10, label: '10%' }
               ]}
             />
-            <Typography variant="h6">Change in Public Transportation Percentage</Typography>
+            <Typography variant="h6">Percent Change in Number of Public Transportation users per Year</Typography>
             <Slider
               className="slider-custom"
               value={publicTransport}
@@ -319,7 +422,7 @@ const Main = () => {
                 { value: 10, label: '10%' }
               ]}
             />
-            <Typography variant="h6">Change in Electric Bike Percentage</Typography>
+            <Typography variant="h6">Percent Change in Number of Electric Bikes per Year</Typography>
             <Slider
               className="slider-custom"
               value={electricBikes}
@@ -349,6 +452,10 @@ const Main = () => {
               step={0.1}
               min={-10}
               max={10}
+              marks={[
+                { value: -10, label: '-10%' },
+                { value: 10, label: '10%' }
+              ]}
             />
             <Typography variant="h6">Change in Fossil Energy</Typography>
             <Slider
@@ -360,6 +467,45 @@ const Main = () => {
               step={0.1}
               min={-5}
               max={5}
+              marks={[
+                { value: -5, label: '-5%' },
+                { value: 5, label: '5%' }
+              ]}
+            />
+            <Typography variant="h6">Change in Electricty Use</Typography>
+            <Slider
+              className="slider-custom"
+              value={electricity}
+              onChange={(e, value) => setElectricity(value)}
+              aria-labelledby="agriculture-slider"
+              valueLabelDisplay="auto"
+              step={0.1}
+              min={-5}
+              max={5}
+              marks={[
+                { value: -5, label: '-5%' },
+                { value: 5, label: '5%' }
+              ]}
+            />
+          </Box>
+        )}
+
+        {selectedTab === 2 && (
+          <Box component={Paper} elevation={8} p={4} mb={4}>
+            <Typography variant="h6">Increase in Added Carbon Tax (USD / ton of C02)</Typography>
+            <Slider
+              className="slider-custom"
+              value={carbonTax}
+              onChange={(e, value) => setCarbonTax(value)}
+              aria-labelledby="energy-slider"
+              valueLabelDisplay="auto"
+              step={0.1}
+              min={0}
+              max={30}
+              marks={[
+                { value: 0, label: '0%' },
+                { value: 30, label: '30%' }
+              ]}
             />
           </Box>
         )}
